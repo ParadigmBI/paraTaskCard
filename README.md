@@ -1,3 +1,3 @@
 ParaTaskCard
 ------------
-This Visual is designed to display filtered data on an Adaptive Card. Paradigm BI already has a custom Power BI Visual for Tasks as part of Active Business Intelligence initiative. ParaTaskCard is a custom visual that fulfils the same function with some added features and a few constraints.
+This Visual is designed to display filtered data on an Adaptive Card that can be submitted to a target URL. Paradigm BI This is part of the Paradigm BI Active Business Intelligence initiative. Visit https://blog.paradigmbi.com.au/ to learn more about Adaptivecards and how to use them in Power BI. There is also an Adaptive Cards in the AppStore which does not do a submit and is suitable for use as a filter or a single card.

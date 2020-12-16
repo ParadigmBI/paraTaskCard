@@ -4,7 +4,7 @@
   "version": "3.1.0",
   "author": {
     "name": "Dmitry Vann",
-    "email": "smith11041104@gmail.com"
+    "email": "dmitry@mikeallen.com.au"
   },
   "scripts": {
     "pbiviz": "pbiviz",
@@ -19,7 +19,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MikeAinOz/paraTaskCard"
+    "url": "https://github.com/ParadigmBI/paraTaskCard"
   },
   "dependencies": {
     "@babel/polyfill": "^7.10.1",
