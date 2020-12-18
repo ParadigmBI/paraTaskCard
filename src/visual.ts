@@ -344,7 +344,7 @@ export class Visual implements IVisual {
         this.removeAllCalss();
         if (theme !== 0) $(".bigDiv").addClass("theme" + theme);
         this.setIdenityIntoDiv();
-        this.setBehavior(this.divSelection);
+        // this.setBehavior(this.divSelection);
         // input.on("change", function(){
         //     that.inputChanged = true;
         //     button.dispatch("click");
