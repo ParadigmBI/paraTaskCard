@@ -16,8 +16,13 @@
             "kind": "Measure"
         },
         {
-            "displayName": "JSON Fields",
-            "name": "jvalue",
+            "displayName": "Choice Fields",
+            "name": "chvalueg",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Choice Value Fields",
+            "name": "chvalue",
             "kind": "Measure"
         }
     ],
@@ -25,6 +30,12 @@
         "renderGroup": {
             "displayName": "Card Render",
             "properties": {
+                "choiceName": {
+                    "displayName": "Choice Name",
+                    "type": {
+                        "text": true
+                    }
+                },
                 "isUrlData": {
                     "displayName": "Database / Url",
                     "type": {
@@ -353,6 +364,9 @@
                   },
                   "jvalue": {
                       "max": 20
+                  },
+                  "chvalue": {
+                      "max": 20
                   }
               }
           ],
@@ -366,9 +380,11 @@
                 }
             },
             "values": {
-                "select": [ { "bind": { "to": "cvalue" } },
-                            { "bind": { "to": "svalue" } },
-                            { "bind": { "to": "jvalue" } }],
+                "select": [ { "bind": { "to": "cvalue" }},
+                            { "bind": { "to": "svalue" }},
+                            { "bind": { "to": "jvalue" }},
+                            { "bind": { "to": "chvalueg"}},
+                            { "bind": { "to": "chvalue"}}],
                 "dataReductionAlgorithm": { "top": {} }
             }
           }

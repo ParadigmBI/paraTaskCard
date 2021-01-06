@@ -82,6 +82,7 @@ import IBehaviorOptions = interactivityService.IBehaviorOptions;
 import { behavior } from "./behavior";
 import { update } from "powerbi-visuals-utils-chartutils/lib/legend/legendData";
 import { data } from "jquery";
+import { sample } from "lodash";
 type Selection = d3.Selection<any, any, any, any>;
 
 interface Payload {
@@ -104,6 +105,7 @@ export class SettingState {
     sampleJSONData: boolean = false;
     templateUrl: string = "https://";
     targetUrl: string = "https://";
+    choiceName: string = "Detail";
     cardWidth: number = 400;
     padding: number = 10;
     margin: number = 10;
@@ -141,6 +143,7 @@ export class Visual implements IVisual {
     private templateJSON;
     private dateFields;
     private jvalueName;
+    private chvalueName;
     private svalueName;
     private sampleData;
     public static scrollWidth = 20;
@@ -375,6 +378,7 @@ export class Visual implements IVisual {
         this.setSetting(objects, this.settings, 1, "renderGroup", "isUrlData", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "sampleJSONData", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "templateUrl", 0);
+        this.setSetting(objects, this.settings, 1, "renderGroup", "choiceName", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "targetUrl", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "cardWidth", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "borderShow", 0);
@@ -500,7 +504,16 @@ export class Visual implements IVisual {
         else return formatter.format(Visual.GETSTRING(val));   
     }
 
-    public getData(categories, jvalueArr, svalueArr) {
+    public IsJsonString(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    public getData(categories, jvalueArr, svalueArr, chvalueArr, groupedCnt) {
         let data = [];
         this.sampleData = [];
         let svalue = {};
@@ -512,8 +525,22 @@ export class Visual implements IVisual {
                     svalue[name] = this.getValue(val, this.formatterValuesArr[j]);
                 }
                 for (let j = 0; j < jvalueArr.length; j++) {
-                    let val = jvalueArr[j][0], name = this.jvalueName[j].toString();
-                    svalue[name] = JSON.parse(val.toString());
+                    let val = jvalueArr[j][0], name = this.jvalueName[j].toString(), str = val.toString();
+                    if (this.IsJsonString(str)) {
+                        svalue[name] = JSON.parse(str);
+                    }
+                }
+                if (chvalueArr.length > 0) {
+                    let ch = [];
+                    for (let i = 0; i < groupedCnt; i++) {
+                        let js = {};
+                        for (let j = 0; j < chvalueArr.length; j++) {
+                            let val = chvalueArr[j][i], name = this.chvalueName[j].toString(), str = val.toString();
+                            js[name] = str;
+                        }
+                        ch.push(js);
+                    }
+                    svalue[this.settings.choiceName] = ch;
                 }
             } else svalue = svalueArr[0][0];
         }
@@ -609,10 +636,10 @@ export class Visual implements IVisual {
         this.setSettings(objects);
         
         let columns = dataViews[0].metadata.columns, sandboxWidth = $('#sandbox-host').width(), sandboxHeight = $('#sandbox-host').height();
-        let svalueArr = [], categories = [], jvalueArr = [];
+        let svalueArr = [], categories = [], jvalueArr = [], chvalueArr = [];
         this.setSelectedIdOptions(categorical, dataViews[0]);
         let innerValueCount = 0;
-        this.jvalueName = [], this.svalueName = [];
+        this.jvalueName = [], this.svalueName = [], this.chvalueName = [];
         this.templateHTML = "";
         for (let i = 0; i < values.length; i++) {
             if (values[i].source.roles["svalue"]) {
@@ -637,6 +664,15 @@ export class Visual implements IVisual {
                 for (let j = 0; j < values[i].values.length; j++) { 
                     this.templateHTML = values[i].values[j];
                 }
+            } else if (values[i].source.roles["chvalue"]) {
+                let displayName = values[i].source.displayName.toString();
+                if (displayName.indexOf("First ") == 0) displayName = displayName.slice(6);
+                this.chvalueName.push(displayName);
+                let tmp = [];
+                for (let j = 0; j < values[i].values.length; j++) { 
+                    tmp.push(values[i].values[j]);
+                }
+                chvalueArr.push(tmp);
             }
         }
         // if (this.templateHTML === "") return;
@@ -644,7 +680,12 @@ export class Visual implements IVisual {
         this.getFormatter(dataViews[0]);
         if (categorical.categories) categories = categorical.categories[0].values, this.categoryName = categorical.categories[0].source.displayName, this.categoryId = categorical.categories[0].values[0];
         else categories = this.jvalueName;
-        let data = this.getData(categories, jvalueArr, svalueArr);
+        let groupedCnt = 0;
+        for (let i = 0; i < categories.length; i++) {
+            if (categories[i] !== categories[0]) break;
+            groupedCnt ++;
+        }
+        let data = this.getData(categories, jvalueArr, svalueArr, chvalueArr, groupedCnt);
         // if (that.prevTemplateUrl !== that.settings.templateUrl || Visual.categoryJSON !== JSON.stringify(options.dataViews[0].categorical)) {
         //     // using XMLHttpRequest
         //     let xhr = new XMLHttpRequest();
@@ -750,6 +791,7 @@ export class Visual implements IVisual {
             objectName: "renderGroup",
             selector: null,
             properties: {
+                choiceName: this.settings.choiceName,
                 targetUrl: this.settings.targetUrl,
                 cardWidth: this.settings.cardWidth,
                 theme: this.settings.theme,
