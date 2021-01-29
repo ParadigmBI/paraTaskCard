@@ -499,9 +499,8 @@ export class Visual implements IVisual {
 
     public getValue(val, formatter) {
         let dt = new Date(val);
-        if (!isNaN(val)) return Number(val);
-        else if (val && dt.toString() !== "Invalid Date" && dt.getFullYear() > 1800 && (Visual.ISDATE(val))) return this.getISOString(dt);
-        else return formatter.format(Visual.GETSTRING(val));   
+        if (val && dt.toString() !== "Invalid Date" && dt.getFullYear() > 1800 && (Visual.ISDATE(val))) return this.getISOString(dt, formatter);
+        else return formatter.format(Visual.GETSTRING(val));
     }
 
     public IsJsonString(str) {
@@ -549,22 +548,26 @@ export class Visual implements IVisual {
         return data;
     }
 
-    public getISOString(dt) {
+    public getISOString(dt, formatter) {
         let val = dt.toISOString();
-        if (dt.getHours() === 0 && dt.getMinutes() === 0 && dt.getSeconds() === 0) val = val.substr(0, val.length - 5) + "Z";
-        return val;
+        return formatter.format(dt);
+        if (dt.getHours() === 0 && dt.getMinutes() === 0 && dt.getSeconds() === 0) return val.substr(0, val.length - 5) + "Z";
+        return formatter.format(dt);
     }
 
-    public getFormatter(dataView) {
+    
+
+    public getFormatter(dataView, name) {
         let fcolumns = dataView.metadata.columns;
         let formatterValuesArr = [], formatterValuesArra = [], valuesDisplayName = [];
-        let formatterValuesJArr = [], formatterValuesJArra = [], valuesCDisplayName = [];
         let valueNames = [], valueSources = dataView.categorical.values;
         for (let i = 0; i < valueSources.length; i++) {
-            valueNames.push(valueSources[i].source.displayName);
+            if(valueSources[i].source.roles[name]) {
+                valueNames.push(valueSources[i].source.displayName);
+            }
         }
         for (let i = 0; i < fcolumns.length; i++) {
-             if (fcolumns[i].roles["svalue"]) {
+             if (fcolumns[i].roles[name]) {
                 let formatter = valueFormatter.create({
                     format: valueFormatter.getFormatStringByColumn(
                         dataView.metadata.columns[i],
@@ -578,20 +581,6 @@ export class Visual implements IVisual {
                     if (displayName === valuesDisplayName[j]) break;
                 }
                 valuesDisplayName.push(displayName);
-            } else if (fcolumns[i].roles["jvalue"]) {
-                let formatter = valueFormatter.create({
-                    format: valueFormatter.getFormatStringByColumn(
-                        dataView.metadata.columns[i],
-                        true),
-                });
-                formatterValuesJArr.push(formatter);
-                formatterValuesJArra.push(formatter);
-                let displayName = fcolumns[i].displayName,
-                    j;
-                for (j = 0; j < valuesCDisplayName.length; j++) {
-                    if (displayName === valuesCDisplayName[j]) break;
-                }
-                valuesCDisplayName.push(displayName);
             }
         }
         for (let i = 0; i < valuesDisplayName.length; i++) {
@@ -605,21 +594,7 @@ export class Visual implements IVisual {
             formatterValuesArr[j] = formatterValuesArra[i];
             formatterValuesArra[i] = tmp;
         }
-        let len = valuesDisplayName.length;
-        for (let i = 0; i < valuesCDisplayName.length; i++) {
-            let j;
-            for (j = len; j < valueNames.length; j++) {
-                if (valuesCDisplayName[i] == valueNames[j]) {
-                    break;
-                }
-            }
-            let tmp = formatterValuesJArra[i];
-            formatterValuesJArr[i] = formatterValuesJArra[j - len];
-            formatterValuesJArra[j - len] = tmp;
-        }
-
-        this.formatterValuesArr = formatterValuesArr;
-        this.formatterValuesJArr = formatterValuesJArr;
+        return formatterValuesArr;
     }
 
     public update(options: VisualUpdateOptions) {
@@ -677,7 +652,8 @@ export class Visual implements IVisual {
         }
         // if (this.templateHTML === "") return;
         this.categoryName = null;
-        this.getFormatter(dataViews[0]);
+        this.formatterValuesArr = this.getFormatter(dataViews[0], "svalue");
+        this.formatterValuesJArr = this.getFormatter(dataViews[0], "jvalue");
         if (categorical.categories) categories = categorical.categories[0].values, this.categoryName = categorical.categories[0].source.displayName, this.categoryId = categorical.categories[0].values[0];
         else categories = this.jvalueName;
         let groupedCnt = 0;
