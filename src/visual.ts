@@ -503,7 +503,7 @@ export class Visual implements IVisual {
         else return formatter.format(Visual.GETSTRING(val));
     }
 
-    public IsJsonString(str) {
+    public isJsonString(str) {
         try {
             JSON.parse(str);
         } catch (e) {
@@ -525,7 +525,7 @@ export class Visual implements IVisual {
                 }
                 for (let j = 0; j < jvalueArr.length; j++) {
                     let val = jvalueArr[j][0], name = this.jvalueName[j].toString(), str = val.toString();
-                    if (this.IsJsonString(str)) {
+                    if (this.isJsonString(str)) {
                         svalue[name] = JSON.parse(str);
                     }
                 }
